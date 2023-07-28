@@ -64,3 +64,6 @@ google:
   issuers:
     - "https://accounts.google.com"
 
+basicauth:
+  enabled: false
+  users: ""
