@@ -47,7 +47,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		utils.GeneralResponseTemplate(w, "Missing or invalid audience parameter", http.StatusBadRequest)
 		return
 	}
-	utils.RenderTemplate(w, "login", &model.Params{Code: code, Audience: audience, Redirect: redirect})
+	if _cfg.BasicAuth.Enabled {
+		utils.RenderTemplate(w, "basicauth", &model.Params{Code: code, Audience: audience, Redirect: redirect})
+	} else {
+		utils.RenderTemplate(w, "login", &model.Params{Code: code, Audience: audience, Redirect: redirect})
+	}
 }
 
 func authorizeHandler(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +102,60 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO: Refactor: Duplicity with google handler
+func callbackBasicauthHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Endpoint Hit (POST): /callback/basicauth")
+
+	if !_cfg.BasicAuth.Enabled {
+		utils.GeneralResponseTemplate(w, "Basic auth is not enabled.", http.StatusBadRequest)
+		return
+	}
+
+	// get username and password from basic auth
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		log.Debug("Endpoint Hit (POST): /callback/basicauth with missing basic auth")
+		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// check if user exists in array of htaccess users
+	if !utils.CheckHtaccessUser(username, password) {
+		log.Debug("Endpoint Hit (POST): /callback/basicauth with invalid basic auth")
+		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		utils.GeneralResponseTemplate(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	code := r.Form.Get("code")
+	if _, err := validateRegex(codeValidRegex, code); err != nil {
+		log.Info("Invalid or missing code, code will be empty.")
+		code = ""
+	}
+	redirect := r.Form.Get("redirect")
+	audience := r.Form.Get("audience")
+	if _, err := validateRegex(audienceValidRegex, audience); err != nil {
+		utils.GeneralResponseTemplate(w, "Missing or invalid audience parameter", http.StatusBadRequest)
+		return
+	}
+	params := &model.Params{
+		Code:     code,
+		Audience: audience,
+		Provider: "basicauth",
+		Redirect: redirect,
+		Upn:      username,
+	}
+
+	userDetails, err := nebulaAuthHandler.HandleAuthorization(w, username, params)
+	if err == nil {
+		nebulaAuthHandler.HandleOauth(w, r, params, userDetails)
+	}
+}
+
 func callbackMicrosoftHandler(w http.ResponseWriter, request *http.Request) {
 	log.Debug("Endpoint Hit (POST): /callback/microsoft")
 
@@ -159,6 +217,7 @@ func Run(cfg *utils.Config) {
 	myRouter.HandleFunc("/authorize", authorizeHandler).Methods("POST")
 	myRouter.HandleFunc("/callback/microsoft", callbackMicrosoftHandler).Methods("POST")
 	myRouter.HandleFunc("/callback/google", callbackGoogleHandler).Methods("POST")
+	myRouter.HandleFunc("/callback/basicauth", callbackBasicauthHandler).Methods("POST")
 	myRouter.HandleFunc("/oauth2/v1/certs", oauthCerts).Methods("GET")
 	myRouter.HandleFunc("/.well-known/openid-configuration", openIdConfiguration).Methods("GET")
 

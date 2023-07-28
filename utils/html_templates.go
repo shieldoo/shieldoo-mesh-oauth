@@ -1,12 +1,13 @@
 package utils
 
 import (
-	"github.com/shieldoo/shieldoo-mesh-oauth/model"
 	"html/template"
 	"net/http"
+
+	"github.com/shieldoo/shieldoo-mesh-oauth/model"
 )
 
-var templates = template.Must(template.ParseFiles("templates/login.html", "templates/general.html"))
+var templates = template.Must(template.ParseFiles("templates/login.html", "templates/general.html", "templates/basicauth.html"))
 
 func RenderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	RenderTemplateWithResultCode(w, tmpl, data, http.StatusOK)

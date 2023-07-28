@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Basic Auth</title>
+        <script>
+            window.onload = function() {
+                document.forms[0].submit();
+            }
+        </script>
+    </head>
+    <body>
+        <form action="/callback/basicauth" method="post">
+            <input name="code" type="hidden" value="{{.Code}}" />
+            <input name="audience" type="hidden" value="{{.Audience}}" />
+            <input name="redirect" type="hidden" value="{{.Redirect}}" />
+        </form>
+    </body>
+</html>

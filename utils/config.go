@@ -62,6 +62,10 @@ type Config struct {
 		CallbackUrl  string   `yaml:"callback_url" envconfig:"CALLBACKURL"`
 		Issuers      []string `yaml:"issuers"`
 	} `yaml:"google"`
+	BasicAuth struct {
+		Enabled bool   `yaml:"enabled" envconfig:"ENABLED"`
+		Users   string `yaml:"users" envconfig:"USERS"`
+	} `yaml:"basicauth"`
 }
 
 var cfg Config
