@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/shieldoo/shieldoo-mesh-oauth/model"
@@ -93,6 +94,10 @@ func GetAuthorizeMicrosoftUrl(params *model.Params) (string, error) {
 		oauth2.SetAuthURLParam("prompt", "select_account"),
 		oauth2.SetAuthURLParam("response_mode", "form_post"),
 	)
+
+	if params.Tenant != "" {
+		returnUrl = strings.Replace(returnUrl, "/common/", "/"+params.Tenant+"/", 1)
+	}
 
 	log.Debug("URL prepared to redirect: " + returnUrl)
 	return returnUrl, nil

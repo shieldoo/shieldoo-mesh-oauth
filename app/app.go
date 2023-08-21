@@ -37,6 +37,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	redirect := r.URL.Query().Get("redirect")
 	audience := r.URL.Query().Get("audience")
+	tenant := r.URL.Query().Get("aad_tenant_id")
 	if audience == "" && code != "" {
 		utils.GeneralResponseTemplate(w, "Missing audience parameter when device login active.", http.StatusBadRequest)
 	}
@@ -50,7 +51,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if _cfg.BasicAuth.Enabled {
 		utils.RenderTemplate(w, "basicauth", &model.Params{Code: code, Audience: audience, Redirect: redirect})
 	} else {
-		utils.RenderTemplate(w, "login", &model.Params{Code: code, Audience: audience, Redirect: redirect})
+		utils.RenderTemplate(w, "login", &model.Params{Code: code, Audience: audience, Redirect: redirect, Tenant: tenant})
 	}
 }
 
@@ -67,6 +68,7 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	redirect := r.Form.Get("redirect")
 	audience := r.Form.Get("audience")
+	tenant := r.Form.Get("tenant")
 	if _, err := validateRegex(audienceValidRegex, audience); err != nil {
 		utils.GeneralResponseTemplate(w, "Missing or invalid audience parameter", http.StatusBadRequest)
 		return
@@ -81,6 +83,7 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		Audience: audience,
 		Provider: provider,
 		Redirect: redirect,
+		Tenant:   tenant,
 	}
 	var url string
 	var err error
