@@ -250,16 +250,27 @@
 
 <a href="https://shieldoo.io">&larr; &nbsp; Return to Shieldoo homepage</a>
 
+<script>
+    var tenantId = '{{.Tenant}}';
+    if (tenantId !== '') {
+        window.addEventListener('load', function () {
+            document.forms.google.hidden = true;
+            document.forms.microsoft.submit();
+        })
+    }
+</script>
+
 <main>
     <h1>
         Sign in with your identity provider
     </h1>
 
-    <form action="/authorize" method="POST">
+    <form name="microsoft" action="/authorize" method="POST">
         <input name="provider" type="hidden" value="microsoft" />
         <input name="code" type="hidden" value="{{.Code}}" />
         <input name="audience" type="hidden" value="{{.Audience}}" />
         <input name="redirect" type="hidden" value="{{.Redirect}}" />
+        <input name="tenant" type="hidden" value="{{.Tenant}}" />
         <button class="button-logo button-oauth" name="submitbtn" type="submit">
             <svg fill="none" height="17" viewBox="0 0 16 16" width="17" xmlns="http://www.w3.org/2000/svg">
                 <path d="M0 0H7.57886V7.57886H0V0Z" fill="#F25022" />
@@ -271,7 +282,7 @@
         </button>
     </form>
 
-    <form action="/authorize" method="POST">
+    <form name="google" action="/authorize" method="POST">
         <input name="provider" type="hidden" value="google" />
         <input name="code" type="hidden" value="{{.Code}}" />
         <input name="audience" type="hidden" value="{{.Audience}}" />
@@ -301,7 +312,7 @@
     </form>
 </main>
 
-<footer class="page-footer">Copyright © 2022 Shieldoo.io  |  All rights reserved.</footer>
+<footer class="page-footer">Copyright © 2022-2023 Shieldoo.io  |  All rights reserved.</footer>
 </body>
 
 </html>

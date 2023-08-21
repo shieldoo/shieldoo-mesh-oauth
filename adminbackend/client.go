@@ -3,11 +3,12 @@ package adminbackend
 import (
 	"errors"
 	"fmt"
+	"regexp"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/shieldoo/shieldoo-mesh-oauth/model"
 	"github.com/shieldoo/shieldoo-mesh-oauth/oauthserver"
 	log "github.com/sirupsen/logrus"
-	"regexp"
 )
 
 var (
@@ -23,11 +24,15 @@ func GetUserDetails(upn string, params *model.Params) (*model.SysApiUserDetail, 
 		"upn":      upn,
 		"audience": params.Audience,
 	}).Debug("AdminBackend URL: ", backendBaseUrl)
+	tenant := params.Provider
+	if params.Tenant != "" {
+		tenant += ":" + params.Tenant
+	}
 	resp, err := client.R().
 		SetHeader("Accept", "application/json").
 		SetAuthToken(oauthserver.CreateInternalToken(params)).
 		SetResult(&model.SysApiUserDetail{}).
-		Get(fmt.Sprintf("%s/sysapi/user/%s/%s", backendBaseUrl, upn, params.Provider))
+		Get(fmt.Sprintf("%s/sysapi/user/%s/%s", backendBaseUrl, upn, tenant))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"upn":      upn,
