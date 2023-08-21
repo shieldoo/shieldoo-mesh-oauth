@@ -9,9 +9,10 @@ import (
 )
 
 type StaticAudience struct {
-	Name      string `yaml:"name" envconfig:"NAME"`
-	Redirect  string `yaml:"redirect" envconfig:"REDIRECT"`
-	Authorize bool   `yaml:"authorize" envconfig:"AUTHORIZE"`
+	Name         string `yaml:"name" envconfig:"NAME"`
+	Redirect     string `yaml:"redirect" envconfig:"REDIRECT"`
+	Authorize    bool   `yaml:"authorize" envconfig:"AUTHORIZE"`
+	AuthorizeUrl string `yaml:"authorizeUrl" envconfig:"AUTHORIZEURL"`
 }
 
 type Signing struct {

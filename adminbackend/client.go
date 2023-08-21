@@ -16,23 +16,21 @@ var (
 	regexAudRepl    = regexp.MustCompile(`\{\{\s*AUDIENCE\s*\}\}`)
 )
 
-func GetUserDetails(upn string, params *model.Params) (*model.SysApiUserDetail, error) {
-	// Create a Resty Client
-	client := resty.New()
-	backendBaseUrl := regexAudRepl.ReplaceAllString(_cfg.AdminBackend.BaseUrl, params.Audience)
+func GetUserDetails(upn string, params *model.Params, authorizeUrl string) (*model.SysApiUserDetail, error) {
 	log.WithFields(log.Fields{
 		"upn":      upn,
 		"audience": params.Audience,
-	}).Debug("AdminBackend URL: ", backendBaseUrl)
+	}).Debug("AdminBackend URL: ", authorizeUrl)
 	tenant := params.Provider
 	if params.Tenant != "" {
 		tenant += ":" + params.Tenant
 	}
+	client := resty.New()
 	resp, err := client.R().
 		SetHeader("Accept", "application/json").
 		SetAuthToken(oauthserver.CreateInternalToken(params)).
 		SetResult(&model.SysApiUserDetail{}).
-		Get(fmt.Sprintf("%s/sysapi/user/%s/%s", backendBaseUrl, upn, tenant))
+		Get(fmt.Sprintf("%s/sysapi/user/%s/%s", authorizeUrl, upn, tenant))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"upn":      upn,
@@ -58,6 +56,12 @@ func GetUserDetails(upn string, params *model.Params) (*model.SysApiUserDetail, 
 	result := resp.Result().(*model.SysApiUserDetail)
 
 	return result, nil
+}
+
+func GetUserDetailsWithDefaultBackend(upn string, params *model.Params) (*model.SysApiUserDetail, error) {
+	backendBaseUrl := regexAudRepl.ReplaceAllString(_cfg.AdminBackend.BaseUrl, params.Audience)
+	return GetUserDetails(upn, params, backendBaseUrl)
+
 }
 
 func CreateDeviceLogin(upn string, code string, provider string, audience string) error {
